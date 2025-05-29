@@ -81,58 +81,74 @@
     <input type="number" id="endKm" />
 
     <button onclick="calculate()">คำนวณ</button>
+    <button onclick="resetForm()">ล้างข้อมูล</button>
 
     <div class="result" id="result"></div>
   </div>
 
+  
   <script>
-    function calculate() {
-      const date = document.getElementById('date').value;
-      const grab = parseFloat(document.getElementById('grab').value) || 0;
-      const bolt = parseFloat(document.getElementById('bolt').value) || 0;
-      const tip = parseFloat(document.getElementById('tip').value) || 0;
-      const extraIncome = parseFloat(document.getElementById('extraIncome').value) || 0;
-      const oil = parseFloat(document.getElementById('oil').value) || 0;
-      const otherExpense = parseFloat(document.getElementById('otherExpense').value) || 0;
-      const startKm = parseFloat(document.getElementById('startKm').value) || 0;
-      const endKm = parseFloat(document.getElementById('endKm').value) || 0;
+  function calculate() {
+    const date = document.getElementById('date').value;
+    const grab = parseFloat(document.getElementById('grab').value) || 0;
+    const bolt = parseFloat(document.getElementById('bolt').value) || 0;
+    const tip = parseFloat(document.getElementById('tip').value) || 0;
+    const extraIncome = parseFloat(document.getElementById('extraIncome').value) || 0;
+    const oil = parseFloat(document.getElementById('oil').value) || 0;
+    const otherExpense = parseFloat(document.getElementById('otherExpense').value) || 0;
+    const startKm = parseFloat(document.getElementById('startKm').value) || 0;
+    const endKm = parseFloat(document.getElementById('endKm').value) || 0;
 
-      const distance = endKm - startKm;
-      const boltCommission = bolt * 0.18;
-      const boltAfter = bolt - boltCommission;
-
-      const totalIncomeBeforeMaintenance = grab + boltAfter + extraIncome;
-      const maintenance = totalIncomeBeforeMaintenance * 0.10;
-      const totalExpenses = oil + otherExpense + maintenance + boltCommission;
-      const netIncome = totalIncomeBeforeMaintenance - totalExpenses + tip;
-      const costPerKm10 = distance > 0 ? (netIncome / (distance * 10)).toFixed(2) : "0.00";
-      const halfIncomePlus10 = ((netIncome / 2) * 1.10).toFixed(2);
-
-      const resultHTML = `
-        <strong>สรุปผลประจำวันที่: ${date}</strong><br><br>
-        <strong>รายรับ</strong><br>
-        GRAB: ${grab.toFixed(2)} บาท<br>
-        BOLT: ${bolt.toFixed(2)} บาท (หัก 18%: ${boltCommission.toFixed(2)} บาท เหลือ: ${boltAfter.toFixed(2)} บาท)<br>
-        รายรับอื่นๆ: ${extraIncome.toFixed(2)} บาท<br>
-        รวมรายรับก่อนหักค่าซ่อม: ${totalIncomeBeforeMaintenance.toFixed(2)} บาท<br><br>
-
-        <strong>รายจ่าย</strong><br>
-        ค่าซ่อม 10%: ${maintenance.toFixed(2)} บาท<br>
-        ค่าน้ำมัน: ${oil.toFixed(2)} บาท<br>
-        รายจ่ายอื่นๆ: ${otherExpense.toFixed(2)} บาท<br>
-        ค่าคอมมิชชั่น BOLT: ${boltCommission.toFixed(2)} บาท<br>
-        รวมรายจ่ายทั้งหมด: ${totalExpenses.toFixed(2)} บาท<br><br>
-
-        <strong>ทิป:</strong> ${tip.toFixed(2)} บาท<br>
-        <strong>รายได้สุทธิ:</strong> ${netIncome.toFixed(2)} บาท<br>
-        <strong>หาร 2 +10%:</strong> ${halfIncomePlus10} บาท<br><br>
-
-        <strong>ระยะทางที่ใช้:</strong> ${distance} กม.<br>
-        <strong>บาทต่อกิโลเมตร (หาร 10):</strong> ${costPerKm10} บาท/กม.
-      `;
-
-      document.getElementById('result').innerHTML = resultHTML;
+    const distance = endKm - startKm;
+    if (distance < 0) {
+      alert("กรุณากรอกเลขกิโลเมตรให้ถูกต้อง (เลิกงานต้องมากกว่าเริ่มงาน)");
+      return;
     }
+
+    const boltCommission = bolt * 0.18;
+    const boltAfter = bolt - boltCommission;
+    const totalIncomeBeforeMaintenance = grab + boltAfter + extraIncome;
+    const maintenance = totalIncomeBeforeMaintenance * 0.10;
+
+    const totalExpenses = oil + otherExpense + maintenance + boltCommission;
+    const netIncome = totalIncomeBeforeMaintenance - totalExpenses + tip;
+
+    const halfIncomePlusMaintenance = (netIncome / 2 + maintenance).toFixed(2);
+    const costPerKm = distance > 0 ? ((boltAfter + extraIncome) / distance).toFixed(2) : "0.00";
+
+    const format = n => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    const resultHTML = \`
+      <strong>สรุปผลประจำวันที่: \${date}</strong><br><br>
+      <strong>รายรับ</strong><br>
+      GRAB: \${format(grab)} บาท<br>
+      BOLT: \${format(bolt)} บาท (หัก 18%: \${format(boltCommission)} บาท เหลือ: \${format(boltAfter)} บาท)<br>
+      รายรับอื่นๆ: \${format(extraIncome)} บาท<br>
+      รวมรายรับก่อนหักค่าซ่อม: \${format(totalIncomeBeforeMaintenance)} บาท<br><br>
+
+      <strong>รายจ่าย</strong><br>
+      ค่าซ่อม 10%: \${format(maintenance)} บาท<br>
+      ค่าน้ำมัน: \${format(oil)} บาท<br>
+      รายจ่ายอื่นๆ: \${format(otherExpense)} บาท<br>
+      ค่าคอมมิชชั่น BOLT: \${format(boltCommission)} บาท<br>
+      รวมรายจ่ายทั้งหมด: \${format(totalExpenses)} บาท<br><br>
+
+      <strong>ทิป:</strong> \${format(tip)} บาท<br>
+      <strong>รายได้สุทธิ:</strong> \${format(netIncome)} บาท<br>
+      <strong>หาร 2 + ค่าซ่อม:</strong> \${halfIncomePlusMaintenance} บาท<br><br>
+
+      <strong>ระยะทางที่ใช้:</strong> \${distance} กม.<br>
+      <strong>บาทต่อกิโลเมตร:</strong> \${costPerKm} บาท/กม.
+    \`;
+
+    document.getElementById('result').innerHTML = resultHTML;
+  }
+
+  function resetForm() {
+    document.querySelectorAll('input').forEach(input => input.value = '');
+    document.getElementById('result').innerHTML = '';
+  }
   </script>
+
 </body>
 </html>
